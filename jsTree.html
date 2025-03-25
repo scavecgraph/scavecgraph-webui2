@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8" />
+        <title>Simple jsTree using ajax and load nodes on demand</title>
+        <link rel="stylesheet" href="jsTrees/themes/default/style.min.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="jsTrees/jstree.min.js"></script>
+        <script src='http://lovasoa.github.io/tidy-html5/tidy.js'></script>        
+        <script type="text/javascript">
+            var options = {
+                    "indent":"auto",
+                    "indent-spaces":2,
+                    "wrap":80,
+                    "markup":true,
+                    "output-xml":false,
+                    "numeric-entities":true,
+                    "quote-marks":true,
+                    "quote-nbsp":false,
+                    "show-body-only":true,
+                    "quote-ampersand":false,
+                    "break-before-br":true,
+                    "uppercase-tags":false,
+                    "uppercase-attributes":false,
+                    "drop-font-tags":true,
+                    "tidy-mark":false
+                }      
+            $(function () {
+                //$("#SimpleJSTree").css("transform", "scale(0.8)");
+                $("#SimpleJSTree").jstree({
+                    "core": {
+                        "themes": {
+                            "responsive": false
+                        },
+                        // so that create works
+                        "check_callback": true,
+                        'data': {
+                            'url': function(node) {
+                                //console.log("url node : " + node.id + " - " + node.text);
+                                let id = 2;
+                                if(node.id != "#"){
+                                    //console.log("NOT ROOT NODE");
+                                    id = node.id;
+                                }
+                                return 'http://10.0.0.101:8080/scavecgraph-portal/rest/portal/repo/1/jsTreeBranch/' + id + '/';
+                            },
+                            'data': function(node) {
+                                //console.log("data node : " + node);
+                                return {
+                                    'parent': node.id
+                                };
+                            }
+                        }
+                    }
+                });
+                $('#SimpleJSTree')
+                    .on("changed.jstree", function (event, data) {
+                        console.log("TITLE SELECTED");
+                        if (data.selected.length) {
+                            let node = data.instance.get_node(data.selected[0]);
+                            console.log('Node : ' + node.id + " - " + node.text);
+                            var selectedNode = $("#selectedNode");
+                            selectedNode.html("id : " + node.id + "<br/>title : " + node.text);
+                        }
+                });
+//                $('#SimpleJSTree').on('ready.jstree click', function (e, data) {
+//                        $('i.jstree-icon').removeClass('jstree-themeicon jstree-icon').addClass('fa fa-user');
+//                    });                
+            });
+            
+            function getJsTreeHtml(){
+                var html = $("#SimpleJSTree").html() + "";
+                var jsTreeHtml = $("#jsTreeHtml");
+                var result = tidy_html5(html, options);                
+                jsTreeHtml.val(result);
+            }
+        </script>
+        <style>
+            .div-table {
+                display:table;
+            }
+            .div-tr {
+                display:table-row;
+            }
+            .div-tc {
+                display:table-cell;
+            }       
+            .jstree-anchor{
+                color:#0178af !important;
+            }
+            #SimpleJSTree{
+                transform : scale(0.8);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="div-table">
+            <div class="div-tr">
+                <div class="div-tc" style="vertical-align:top;">
+                    <div id="SimpleJSTree" style="width:360px;height:300px;overflow: auto;"></div>
+                </div>
+                <div class="div-tc" style="vertical-align:top;">
+                    <button name="show" onclick="getJsTreeHtml();">HTML</button><br/>
+                    <div id="selectedNode">
+                        
+                    </div>
+                </div>
+                <div class="div-tc">
+                    <textarea id="jsTreeHtml" cols="120" rows="30">jsTree HTML</textarea>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
